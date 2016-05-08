@@ -6,6 +6,7 @@ import {ValidationConfig} from 'src/validation-config';
 import {metadata} from 'aurelia-metadata';
 
 describe('Validator', () => {
+  let injectedValidator;
   let container;
   let validation;
   let reporter;
@@ -15,7 +16,7 @@ describe('Validator', () => {
 
     beforeEach(() => {
       container = new Container();
-      validation = container.get(Validator);
+      injectedValidator = container.get(Validator);
     });
 
     describe('with a single property', () => {
@@ -23,23 +24,21 @@ describe('Validator', () => {
 
         class Target {
           firstName = 'Patrick';
-          constructor() {
-            this.validation =
-              validation.ensure(this, 'firstName')
-                .length({minimum: 3});
-          }
         }
 
         beforeEach(() => {
           target = new Target();
           metadata.getOrCreateOwn(validationMetadataKey, ValidationConfig, target);
+          validator = injectedValidator
+              .ensure(target, 'firstName')
+                .length({minimum: 3});
         });
 
         describe('.validate', () => {
           it('runs validation against the correct instance / config', (done) => {
             reporter = ValidationEngine.getValidationReporter(target);
             spyOn(reporter, 'publish');
-            target.validation.validate();
+            validator.validate(target);
             setTimeout(() => {
               expect(reporter.publish).toHaveBeenCalled();
               done();
@@ -54,7 +53,7 @@ describe('Validator', () => {
             reporter = ValidationEngine.getValidationReporter(target);
             spyOn(reporter, 'publish');
             target.firstName = 'no';
-            target.validation.validate();
+            validator.validate(target);
             setTimeout(() => {
               expect(reporter.publish).toHaveBeenCalledWith(expectedResult);
               done();
@@ -75,17 +74,16 @@ describe('Validator', () => {
 
         class Target {
           firstName = 'Patrick';
-          constructor() {
-            this.validation =
-              validation.ensure(this, 'firstName')
-                .numericality()
-                .length({minimum: 3});
-          }
         }
 
         beforeEach(() => {
           target = new Target();
           metadata.getOrCreateOwn(validationMetadataKey, ValidationConfig, target);
+
+          validator = injectedValidator
+              .ensure(target, 'firstName')
+                .numericality()
+                .length({minimum: 3});
         });
 
         describe('.validate', () => {
@@ -101,7 +99,7 @@ describe('Validator', () => {
             reporter = ValidationEngine.getValidationReporter(target);
             spyOn(reporter, 'publish');
             target.firstName = 'no';
-            target.validation.validate();
+            validator.validate(target);
             setTimeout(() => {
               expect(reporter.publish).toHaveBeenCalledWith(expectedResult);
               done();
@@ -116,18 +114,17 @@ describe('Validator', () => {
       class Target {
         firstName = 'Patrick';
         lastName = 'Walters';
-        constructor() {
-          this.validation =
-            validation.ensure(this, 'firstName')
-                .length({minimum: 3})
-              .ensure(this, 'lastName')
-                .length({minimum: 3});
-        }
       }
 
       beforeEach(() => {
         target = new Target();
         metadata.getOrCreateOwn(validationMetadataKey, ValidationConfig, target);
+
+        validator = injectedValidator
+            .ensure(target, 'firstName')
+              .length({minimum: 3})
+            .ensure(target, 'lastName')
+              .length({minimum: 3});
       });
 
       describe('.validate', () => {
@@ -144,7 +141,7 @@ describe('Validator', () => {
           spyOn(reporter, 'publish');
           target.firstName = 'no';
           target.lastName = 'no';
-          target.validation.validate();
+          validator.validate(target);
           setTimeout(() => {
             expect(reporter.publish).toHaveBeenCalledWith(expectedResult);
             done();
@@ -154,7 +151,7 @@ describe('Validator', () => {
         it('runs validation against the correct instance / config', (done) => {
           reporter = ValidationEngine.getValidationReporter(target);
           spyOn(reporter, 'publish');
-          target.validation.validate();
+          validator.validate(target);
           setTimeout(() => {
             expect(reporter.publish).toHaveBeenCalled();
             done();
@@ -171,25 +168,24 @@ describe('Validator', () => {
 
     class Target {
       model = new TargetModel();
-      constructor() {
-        this.validation =
-          validation.ensure(this.model, 'firstName')
-            .length({minimum: 3});
-      }
     }
 
     beforeEach(() => {
       container = new Container();
-      validation = container.get(Validator);
+      injectedValidator = container.get(Validator);
       target = new Target();
       metadata.getOrCreateOwn(validationMetadataKey, ValidationConfig, target.model);
+
+      validator = injectedValidator
+        .ensure(target.model, 'firstName')
+          .length({minimum: 3});
     });
 
     describe('.validate', () => {
       it('runs validation against the correct instance / config', (done) => {
         reporter = ValidationEngine.getValidationReporter(target.model);
         spyOn(reporter, 'publish');
-        target.validation.validate();
+        validator.validate(target.model);
         setTimeout(() => {
           expect(reporter.publish).toHaveBeenCalled();
           done();

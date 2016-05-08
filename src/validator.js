@@ -7,12 +7,12 @@ import {metadata} from 'aurelia-metadata';
 export class Validator {
   object;
   config;
-  validate(prop) {
-    let reporter = ValidationEngine.getValidationReporter(this.object);
+  validate(obj, prop) {
+    let reporter = ValidationEngine.getValidationReporter(obj);
     if (prop) {
-      this.config.validate(this.object, reporter, prop);
+      this.config.validate(obj, reporter, prop);
     } else {
-      this.config.validate(this.object, reporter);
+      this.config.validate(obj, reporter);
     }
   }
   getProperties() {
